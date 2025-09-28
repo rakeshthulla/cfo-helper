@@ -59,7 +59,7 @@ priceSlider.oninput = () => priceValue.textContent = priceSlider.value;
 // ==================== Reports History ====================
 const historyLog = document.getElementById("historyLog");
 
-function addReportEntry(simulationType, hiring, marketing, priceIncrease, revenue, expenses, profit, runway) {
+async function addReportEntry(simulationType, hiring, marketing, priceIncrease, revenue, expenses, profit, runway) {
   const date = new Date().toLocaleString();
   const recommendBox = document.getElementById("recommendText");
   const suggestion = recommendBox ? recommendBox.textContent : "";
@@ -76,25 +76,30 @@ function addReportEntry(simulationType, hiring, marketing, priceIncrease, revenu
 
   // Save to backend if user is logged in
   if (loggedInUser) {
-    fetch('http://localhost:3001/save-history', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: loggedInUser,
-        entry: {
-          simulationType,
-          hiring,
-          marketing,
-          priceIncrease,
-          revenue,
-          expenses,
-          profit,
-          runway,
-          suggestion,
-          date
-        }
-      })
-    });
+    try{
+      const res = await fetch(`${API_BASE}/save-history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: loggedInUser,
+          entry: {
+            simulationType,
+            hiring,
+            marketing,
+            priceIncrease,
+            revenue,
+            expenses,
+            profit,
+            runway,
+            suggestion,
+            date
+          }
+        })
+      });
+      if(!res.ok) console.warn('Failed to save history', res.status);
+    }catch(e){
+      console.warn('Could not save history to backend', e);
+    }
   }
 }
 
@@ -262,30 +267,47 @@ exportForecastBtnForecast.addEventListener("click", async () => {
 simulateForecastBtn.addEventListener("click", simulateForecast);
 
 // ==================== Login API Integration ====================
+// If you're using a static dev server (eg Live Server) on port 5501
+// we need to forward API calls to the backend (usually running on :3001).
+// When the frontend is served by the backend itself, API_BASE should be '' (same origin).
+const API_BASE = (window.location.port === '5501') ? 'http://localhost:3001' : '';
+
+// helper to safely parse JSON (avoids 'Unexpected end of JSON input')
+async function safeParseJson(response){
+  try{
+    // if there's no body, res.json() will throw - handle that
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+  }catch(e){
+    console.warn('Failed to parse JSON response', e);
+    return null;
+  }
+}
+
 document.getElementById('loginBtn').addEventListener('click', async () => {
   const user = document.getElementById('username').value;
   const pass = document.getElementById('password').value;
   if(user && pass){
-    const res = await fetch('http://localhost:3001/login', {
+    const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: user, password: pass })
     });
-    const data = await res.json();
+    const data = await safeParseJson(res);
     if(res.ok){
       loggedInUser = user;
       loginPage.style.display = 'none';
       dashboard.style.display = 'block';
 
       // Fetch and display user history
-      fetch('http://localhost:3001/get-history', {
+      fetch(`${API_BASE}/get-history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: user })
       })
-      .then(res => res.json())
+      .then(res => safeParseJson(res))
       .then(data => {
-        if(data.history){
+        if(data && data.history){
           historyLog.innerHTML = '';
           data.history.forEach(entry => {
             const li = document.createElement("li");
@@ -329,12 +351,12 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
       const password = passwordInput ? passwordInput.value : '';
       if(username && password){
         try{
-          const res = await fetch('http://localhost:3001/signup', {
+          const res = await fetch(`${API_BASE}/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
           });
-          const data = await res.json();
+          const data = await safeParseJson(res);
           if(res.ok){
             alert('Signup successful! Please login.');
             signupForm.style.display = 'none';
