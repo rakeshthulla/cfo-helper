@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CFO Helper Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF & html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="splashScreen" class="splash-screen">
+  <h1>CFO Helper</h1>
+</div>
+
+<!-- Login Page -->
+<div id="loginPage" class="login-page" style="display:none;">
+  <div class="login-card">
+    <h1>CFO Helper</h1>
+    <p>Smart Budget & Profit Simulator</p>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+      <!-- Signup toggle and form -->
+      <p class="signup-toggle">Don't have an account? <button id="showSignupBtn" class="link-btn">Sign up</button></p>
+      <div id="signupForm" class="signup-form" style="display:none; margin-top:10px;">
+        <input type="text" id="signupUsername" placeholder="New username">
+        <input type="password" id="signupPassword" placeholder="New password">
+        <button id="signupBtn">Create account</button>
+      </div>
+  </div>
+</div>
+
+
+<!-- Main Dashboard -->
+<div id="dashboard" style="display:none;">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo"><i class="fas fa-coins"></i> CFO Helper</div>
+    <ul class="nav-links">
+      <li data-section="dashboardSection">Dashboard</li>
+      <li data-section="forecastSection">Forecast</li>
+      <li data-section="reportsSection">Reports</li>
+      <li data-section="settingsSection">Settings</li>
+    </ul>
+    <div class="profile"><i class="fas fa-user-circle fa-2x"></i></div>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
+  </nav>
+
+  <!-- Dashboard Section -->
+  <section id="dashboardSection" class="dashboard-section">
+    <div class="hero">
+      <div class="hero-text">
+        <h1>Smart Budget & Profit Simulator</h1>
+        <p>Manage hiring, marketing, and pricing with real-time predictions and charts.</p>
+        <button id="simulateBtnHero" class="hero-btn">Run Simulation 💡</button>
+        <button id="exportPDFBtn" class="hero-btn">Export PDF 📄</button>
+      </div>
+      <div class="hero-image">
+        <img src="building-investment-abstract-concept-vector-illustration-residential-property-commercial-real-estate-financial-plan-future-wealth-city-architecture-bank-loan-housing-abstract-metaphor_335657-5760.jpg" alt="Finance Illustration">
+      </div>
+    </div>
+
+    <main class="dashboard-container">
+      <!-- Controls Panel -->
+      <div class="controls-panel card">
+        <h2>Adjust Inputs</h2>
+        <div class="input-group">
+          <label>Hiring: <span id="hiringValue">0</span></label>
+          <input type="range" id="hiring" min="0" max="10" value="0">
+        </div>
+        <div class="input-group">
+          <label>Marketing Budget (₹): <span id="marketingValue">10000</span></label>
+          <input type="range" id="marketing" min="0" max="50000" value="10000">
+        </div>
+        <div class="input-group">
+          <label>Price Increase (%): <span id="priceValue">0</span></label>
+          <input type="range" id="price" min="0" max="50" value="0">
+        </div>
+        <button id="simulateBtn" class="btn">Simulate 💡</button>
+        <p class="usage">Usage Count: <span id="usageCount">0</span></p>
+      </div>
+
+      <!-- Forecast Panel -->
+      <div class="forecast-panel card" id="forecastContainer">
+        <h2>Forecast</h2>
+        <div class="forecast-values">
+          <p id="revenue">Revenue: ₹0</p>
+          <p id="expenses">Expenses: ₹0</p>
+          <p id="profit">Profit: ₹0</p>
+          <p id="runway">Runway: 0 months</p>
+        </div>
+        <canvas id="chart"></canvas>
+        <div class="recommend-box" id="recommendText">Recommendations appear here</div>
+      </div>
+    </main>
+  </section>
+
+  <!-- Forecast Section -->
+  <section id="forecastSection" class="dashboard-section" style="display:none;">
+    <main class="dashboard-container">
+      <!-- Controls Panel -->
+      <div class="controls-panel card">
+        <h2>Adjust Inputs</h2>
+        <div class="input-group">
+          <label>Hiring: <span id="hiringValueForecast">0</span></label>
+          <input type="range" id="hiringForecast" min="0" max="10" value="0">
+        </div>
+        <div class="input-group">
+          <label>Marketing Budget (₹): <span id="marketingValueForecast">10000</span></label>
+          <input type="range" id="marketingForecast" min="0" max="50000" value="10000">
+        </div>
+        <div class="input-group">
+          <label>Price Increase (%): <span id="priceValueForecast">0</span></label>
+          <input type="range" id="priceForecast" min="0" max="50" value="0">
+        </div>
+        <button id="simulateForecastBtn" class="btn">Simulate 💡</button>
+        <p class="usage">Usage Count: <span id="usageCountForecast">0</span></p>
+      </div>
+
+      <!-- Forecast Panel -->
+      <div class="forecast-panel card" id="forecastContainerForecast">
+        <h2>Forecast</h2>
+        <div class="forecast-values">
+          <p id="revenueForecast">Revenue: ₹0</p>
+          <p id="expensesForecast">Expenses: ₹0</p>
+          <p id="profitForecast">Profit: ₹0</p>
+          <p id="runwayForecast">Runway: 0 months</p>
+        </div>
+        <canvas id="forecastChartForecast"></canvas>
+        <button id="exportForecastBtnForecast" class="btn export" style="margin-top:15px;">Export Forecast PDF 📄</button>
+      </div>
+    </main>
+  </section>
+
+  <!-- Reports Section -->
+  <section id="reportsSection" class="dashboard-section" style="display:none;">
+    <h2>Reports Section</h2>
+    <ul id="historyLog" class="history-list">
+      <!-- Simulation logs will be dynamically added here -->
+    </ul>
+  </section>
+
+  <!-- Settings Section -->
+  <section id="settingsSection" class="dashboard-section" style="display:none;">
+    <div class="settings-panel card">
+      <h2>Settings</h2>
+      <div class="input-group">
+        <label>Currency Symbol:</label>
+        <input type="text" id="currencySymbol" placeholder="₹">
+      </div>
+      <div class="input-group">
+        <label>No of Products Sold:</label>
+        <input type="number" id="defaultUnits" min="0" value="500">
+      </div>
+      <div class="input-group">
+        <label>Price per unit:</label>
+        <input type="number" id="defaultPrice" min="0" value="100">
+      </div>
+      <div class="input-group">
+        <label>Fixed Costs:</label>
+        <input type="number" id="fixedCosts" min="0" value="20000">
+      </div>
+      <div class="input-group">
+        <label>Salaries:</label>
+        <input type="number" id="salaries" min="0" value="30000">
+      </div>
+      <button id="saveSettingsBtn" class="btn">Save Settings</button>
+    </div>
+  </section>
+  <!-- AI Agent Button -->
+<a href="https://cfo-helper-656fa7.zapier.app" target="_blank" class="ai-agent-btn">
+  Chat with AI 🤖
+</a>
+
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2025 CFO Helper | All Rights Reserved</p>
+  </footer>
+</div>
+
+<!-- JS -->
+<script src="script.js"></script>
+</body>
+</html>
