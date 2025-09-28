@@ -4,6 +4,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -13,6 +14,10 @@ require("dotenv").config();
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => {
+  console.error('MongoDB connection error:', err.message || err);
 });
 
 // User schema
@@ -57,7 +62,16 @@ app.post('/login', async (req, res) => {
   res.json({ message: 'Login successful' });
 });
 
-app.listen(3001, () => console.log('Server running on port 3001'));
+// Serve frontend files (index.html, script.js, style.css) from project root
+app.use(express.static(path.join(__dirname)));
+
+// Make sure root returns index.html so deployed servers don't return "Cannot GET /"
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // Save simulation history for a user
 app.post('/save-history', async (req, res) => {
